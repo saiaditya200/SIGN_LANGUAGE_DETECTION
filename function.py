@@ -36,24 +36,16 @@ def extract_keypoints(results):
             [[res.x, res.y, res.z] for res in results.multi_hand_landmarks[0].landmark]
         ).flatten()
         return rh
-    return np.zeros(21 * 3)  # Return zero array if no hand landmarks are found
+    return np.zeros(63)
 
-# Define paths and parameters for data collection
-DATA_PATH = os.path.join('MP_Data')  # Directory for storing data
-actions = np.array(['A', 'B', 'C'])  # Actions corresponding to hand gestures
-no_sequences = 30  # Number of sequences for each action
-sequence_length = 30  # Length of each sequence for action
+DATA_PATH = os.path.join("MP_Data")
+actions = np.array(["A", "B", "C"])
+no_sequences = 30
+sequence_length = 30
 
-# =======================
-# ✅ ADDED EXECUTION BLOCK
-# =======================
-# This part actually runs the code using your webcam.
-# Without this, the file only defines functions and exits.
+print("Program Started")
 
-if __name__ == "__main__":
-
-    # Open webcam (0 = default camera)
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
     # Check camera opened or not
     if not cap.isOpened():
