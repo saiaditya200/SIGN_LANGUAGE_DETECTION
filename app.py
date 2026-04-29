@@ -1,19 +1,17 @@
 from function import *
-from keras.models import model_from_json
+from keras.models import load_model
 import cv2
 import numpy as np
 
-# Load model architecture
-with open("model.json", "r") as json_file:
-    model_json = json_file.read()
+# Load trained model
+print("Loading model...")
+model = load_model("model.h5", compile=False)
+print("Model Loaded")
 
-model = model_from_json(model_json)
-model.load_weights("model.h5")
-
-# Colors for probability bars
+# Colors
 colors = [(245, 117, 16), (117, 245, 16), (16, 117, 245)]
 
-# Visualize probabilities
+# Probability visualization
 def prob_viz(res, actions, input_frame, colors):
     output_frame = input_frame.copy()
 
@@ -43,15 +41,16 @@ def prob_viz(res, actions, input_frame, colors):
 sequence = []
 sentence = []
 predictions = []
-threshold = 0.8
+threshold = 0.5
 
 # Open webcam
 cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
 with mp_hands.Hands(
     model_complexity=0,
-    min_detection_confidence=0.5,
-    min_tracking_confidence=0.5
+    min_detection_confidence=0.3,
+    min_tracking_confidence=0.3,
+    max_num_hands=1
 ) as hands:
 
     while cap.isOpened():
@@ -63,20 +62,19 @@ with mp_hands.Hands(
 
         frame = cv2.flip(frame, 1)
 
-        # Detection area (left box)
-        cropframe = frame[40:400, 0:300]
+        # Full screen detection
+        image, results = mediapipe_detection(frame, hands)
 
-        cv2.rectangle(frame, (0, 40), (300, 400), (255, 255, 255), 2)
+        # Draw landmarks on full frame
+        draw_styled_landmarks(frame, results)
 
-        image, results = mediapipe_detection(cropframe, hands)
-
-        draw_styled_landmarks(cropframe, results)
-
+        # Extract keypoints
         keypoints = extract_keypoints(results)
 
         sequence.append(keypoints)
         sequence = sequence[-30:]
 
+        # Predict after 30 frames
         if len(sequence) == 30:
 
             res = model.predict(
@@ -106,7 +104,7 @@ with mp_hands.Hands(
             frame = prob_viz(res, actions, frame, colors)
 
         # Output bar
-        cv2.rectangle(frame, (0, 0), (640, 40), (245, 117, 16), -1)
+        cv2.rectangle(frame, (0, 0), (800, 40), (245, 117, 16), -1)
 
         cv2.putText(
             frame,
@@ -119,7 +117,7 @@ with mp_hands.Hands(
             cv2.LINE_AA
         )
 
-        cv2.imshow("OpenCV Feed", frame)
+        cv2.imshow("Sign Language Detection", frame)
 
         if cv2.waitKey(10) & 0xFF == ord("q"):
             break
