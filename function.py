@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import os
-import mediapipe as mp  # type: ignore
+import mediapipe as mp
 
 # Initialize mediapipe utilities for drawing and hand detection
 mp_drawing = mp.solutions.drawing_utils
