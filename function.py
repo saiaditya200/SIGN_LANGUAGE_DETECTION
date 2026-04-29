@@ -40,3 +40,45 @@ DATA_PATH = os.path.join('MP_Data')  # Directory for storing data
 actions = np.array(['A', 'B', 'C'])  # Actions corresponding to hand gestures
 no_sequences = 30  # Number of sequences for each action
 sequence_length = 30  # Length of each sequence for action
+
+
+# =======================
+# ✅ ADDED EXECUTION BLOCK
+# =======================
+# This part actually runs the code using your webcam.
+# Without this, the file only defines functions and exits.
+
+if __name__ == "__main__":
+
+    # Open webcam (0 = default camera)
+    cap = cv2.VideoCapture(0)
+
+    # Initialize MediaPipe Hands model
+    with mp_hands.Hands(
+        min_detection_confidence=0.5,
+        min_tracking_confidence=0.5
+    ) as hands:
+
+        while cap.isOpened():
+            ret, frame = cap.read()
+
+            if not ret:
+                print("Failed to grab frame")
+                break
+
+            # Run detection
+            image, results = mediapipe_detection(frame, hands)
+
+            # Draw landmarks
+            draw_styled_landmarks(image, results)
+
+            # Show output
+            cv2.imshow('Hand Detection', image)
+
+            # Press 'q' to quit
+            if cv2.waitKey(10) & 0xFF == ord('q'):
+                break
+
+        # Release resources
+        cap.release()
+        cv2.destroyAllWindows()
