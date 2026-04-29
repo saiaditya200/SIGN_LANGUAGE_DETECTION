@@ -3,54 +3,65 @@ from keras.models import load_model
 import cv2
 import numpy as np
 
-# Load trained model
+# Load model
 print("Loading model...")
 model = load_model("model.h5", compile=False)
 print("Model Loaded")
 
+# Labels
+labels = actions
+
 # Colors
-colors = [(245, 117, 16), (117, 245, 16), (16, 117, 245)]
+colors = [
+    (255, 0, 0),
+    (0, 255, 0),
+    (0, 165, 255)
+]
 
-# Probability visualization
-def prob_viz(res, actions, input_frame, colors):
-    output_frame = input_frame.copy()
+# Prediction threshold
+threshold = 0.6
 
-    for num, prob in enumerate(res):
+# Show probability bars
+def prob_viz(res, labels, frame):
+    output = frame.copy()
+
+    for i in range(len(labels)):
+        prob = float(res[i])
+
         cv2.rectangle(
-            output_frame,
-            (0, 60 + num * 40),
-            (int(prob * 100), 90 + num * 40),
-            colors[num],
+            output,
+            (0, 60 + i * 50),
+            (int(prob * 250), 100 + i * 50),
+            colors[i],
             -1
         )
 
         cv2.putText(
-            output_frame,
-            actions[num],
-            (0, 85 + num * 40),
+            output,
+            labels[i] + " : " + str(round(prob * 100, 1)) + "%",
+            (10, 92 + i * 50),
             cv2.FONT_HERSHEY_SIMPLEX,
-            1,
+            0.8,
             (255, 255, 255),
             2,
             cv2.LINE_AA
         )
 
-    return output_frame
+    return output
 
 # Variables
 sequence = []
-sentence = []
 predictions = []
-threshold = 0.5
+sentence = []
 
-# Open webcam
+# Camera
 cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
 with mp_hands.Hands(
+    max_num_hands=1,
     model_complexity=0,
-    min_detection_confidence=0.3,
-    min_tracking_confidence=0.3,
-    max_num_hands=1
+    min_detection_confidence=0.5,
+    min_tracking_confidence=0.5
 ) as hands:
 
     while cap.isOpened():
@@ -62,10 +73,10 @@ with mp_hands.Hands(
 
         frame = cv2.flip(frame, 1)
 
-        # Full screen detection
+        # Hand detection
         image, results = mediapipe_detection(frame, hands)
 
-        # Draw landmarks on full frame
+        # Draw landmarks
         draw_styled_landmarks(frame, results)
 
         # Extract keypoints
@@ -82,34 +93,46 @@ with mp_hands.Hands(
                 verbose=0
             )[0]
 
-            predictions.append(np.argmax(res))
+            pred = int(np.argmax(res))
+            confidence = float(res[pred])
 
-            if len(predictions) >= 10:
+            predictions.append(pred)
+            predictions = predictions[-3:]
 
-                if np.unique(predictions[-10:])[0] == np.argmax(res):
+            # Stable last 3 predictions same
+            if len(predictions) == 3:
 
-                    if res[np.argmax(res)] > threshold:
+                if predictions[0] == predictions[1] == predictions[2]:
 
-                        if len(sentence) > 0:
+                    if confidence > threshold:
 
-                            if actions[np.argmax(res)] != sentence[-1]:
-                                sentence.append(actions[np.argmax(res)])
+                        word = labels[pred]
 
-                        else:
-                            sentence.append(actions[np.argmax(res)])
+                        if len(sentence) == 0:
+                            sentence.append(word)
 
-            if len(sentence) > 1:
-                sentence = sentence[-1:]
+                        elif word != sentence[-1]:
+                            sentence.append(word)
 
-            frame = prob_viz(res, actions, frame, colors)
+            # Keep only latest output
+            sentence = sentence[-1:]
 
-        # Output bar
-        cv2.rectangle(frame, (0, 0), (800, 40), (245, 117, 16), -1)
+            # Draw bars
+            frame = prob_viz(res, labels, frame)
+
+        # Top output bar
+        cv2.rectangle(
+            frame,
+            (0, 0),
+            (900, 50),
+            (50, 50, 200),
+            -1
+        )
 
         cv2.putText(
             frame,
             "Output: " + " ".join(sentence),
-            (10, 30),
+            (10, 35),
             cv2.FONT_HERSHEY_SIMPLEX,
             1,
             (255, 255, 255),
@@ -119,6 +142,7 @@ with mp_hands.Hands(
 
         cv2.imshow("Sign Language Detection", frame)
 
+        # Quit
         if cv2.waitKey(10) & 0xFF == ord("q"):
             break
 
