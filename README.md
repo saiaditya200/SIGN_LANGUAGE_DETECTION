@@ -2,7 +2,7 @@
 
 Welcome to the **Real-Time Sign Language Detection** project! This end-to-end machine learning tutorial will guide you through building a model that can detect and recognize sign language gestures in real-time. This project utilizes computer vision techniques and deep learning to enable real-time hand gesture detection, making it a valuable tool for accessibility and communication.
 
-![Sign Language Detection Preview](https://github.com/pianalytix/Real-Time-Sign-Language-Detection-Complete-Machine-Learning-Project-Tutorial/blob/main/Sign%20Lang.png?raw=true)
+![Sign Language Detection Preview](https://github.com/saiaditya200/SIGN_LANGUAGE_DETECTION)
 
 ## Project Overview
 
@@ -15,12 +15,6 @@ The project includes:
 - **Data Processing Pipelines** to handle image data and augmentations.
 - **Model Training** using convolutional neural networks (CNN) for gesture classification.
 - **Real-Time Detection** that processes video input to classify gestures on the fly.
-
-## Watch the Full Tutorial
-
-For a complete, step-by-step tutorial, watch the project video on YouTube:
-
-[Watch on YouTube: Real-Time Sign Language Detection](https://youtu.be/ZqYNGUXSrRc?si=CyPLM1Y2L_j6DrZA)
 
 ## Getting Started
 
