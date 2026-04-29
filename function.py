@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import os
-import mediapipe as mp #type: ignore
+import mediapipe as mp  # type: ignore
 
 # Initialize mediapipe utilities for drawing and hand detection
 mp_drawing = mp.solutions.drawing_utils
@@ -26,12 +26,15 @@ def draw_styled_landmarks(image, results):
                 hand_landmarks,
                 mp_hands.HAND_CONNECTIONS,
                 mp_drawing_styles.get_default_hand_landmarks_style(),
-                mp_drawing_styles.get_default_hand_connections_style())
+                mp_drawing_styles.get_default_hand_connections_style()
+            )
 
 # Extract keypoints from the detected landmarks or return zeros if no landmarks are detected
 def extract_keypoints(results):
     if results.multi_hand_landmarks:
-        rh = np.array([[res.x, res.y, res.z] for res in results.multi_hand_landmarks[0].landmark]).flatten()
+        rh = np.array(
+            [[res.x, res.y, res.z] for res in results.multi_hand_landmarks[0].landmark]
+        ).flatten()
         return rh
     return np.zeros(21 * 3)  # Return zero array if no hand landmarks are found
 
@@ -40,7 +43,6 @@ DATA_PATH = os.path.join('MP_Data')  # Directory for storing data
 actions = np.array(['A', 'B', 'C'])  # Actions corresponding to hand gestures
 no_sequences = 30  # Number of sequences for each action
 sequence_length = 30  # Length of each sequence for action
-
 
 # =======================
 # ✅ ADDED EXECUTION BLOCK
@@ -51,7 +53,15 @@ sequence_length = 30  # Length of each sequence for action
 if __name__ == "__main__":
 
     # Open webcam (0 = default camera)
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+
+    # Check camera opened or not
+    if not cap.isOpened():
+        print("Cannot open camera")
+        exit()
+
+    # Create resizable window
+    cv2.namedWindow("Hand Detection", cv2.WINDOW_NORMAL)
 
     # Initialize MediaPipe Hands model
     with mp_hands.Hands(
@@ -59,12 +69,15 @@ if __name__ == "__main__":
         min_tracking_confidence=0.5
     ) as hands:
 
-        while cap.isOpened():
+        while True:
             ret, frame = cap.read()
 
             if not ret:
                 print("Failed to grab frame")
                 break
+
+            # Flip frame horizontally for mirror view
+            frame = cv2.flip(frame, 1)
 
             # Run detection
             image, results = mediapipe_detection(frame, hands)
@@ -73,12 +86,12 @@ if __name__ == "__main__":
             draw_styled_landmarks(image, results)
 
             # Show output
-            cv2.imshow('Hand Detection', image)
+            cv2.imshow("Hand Detection", image)
 
-            # Press 'q' to quit
-            if cv2.waitKey(10) & 0xFF == ord('q'):
+            # Press q to quit
+            if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
-        # Release resources
-        cap.release()
-        cv2.destroyAllWindows()
+    # Release resources
+    cap.release()
+    cv2.destroyAllWindows()
